@@ -142,80 +142,15 @@ const TAB_AGENDA = "AGENDA DO DIA";
 const TAB_SS = "AGENDA SERVIÇO SOCIAL";
 const TAB_AVISOS = "AVISOS";
 
-/* relógio*/
+/* relógio */
 function updateClock(){
-  const now = new Date();
-  const optsDate = { day:"2-digit", month:"2-digit", year:"numeric" };
-  const optsTime = { hour:"2-digit", minute:"2-digit", second:"2-digit" };
-  document.getElementById("clock").textContent = now.toLocaleDateString("pt-BR",optsDate) + " — " + now.toLocaleTimeString("pt-BR",optsTime);
+  const n = new Date();
+  document.getElementById("clock").innerText =
+    n.toLocaleDateString("pt-BR") + " — " +
+    n.toLocaleTimeString("pt-BR");
 }
-setInterval(updateClock,1000);
-updateClock();
+setInterval(updateClock,1000); updateClock();
 
-function formatCell(value){
-  if (value === null || value === undefined) return "";
-
-  // GViz geralmente vem como objeto {v,f}
-  if (typeof value === "object"){
-    if ("v" in value) return formatCell(value.v);
-    if ("f" in value) return formatCell(value.f);
-    return "";
-  }
-
-  const s = String(value).trim();
-
-  /* =========================
-     Date(YYYY,MM,DD[,HH,MM,SS])
-     ========================= */
-  const gvizDate = s.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),?(\d+)?)?\)$/);
-  if (gvizDate){
-    const ano = Number(gvizDate[1]);
-    const mes = Number(gvizDate[2]) + 1;
-    const dia = Number(gvizDate[3]);
-    const hh  = gvizDate[4] !== undefined ? Number(gvizDate[4]) : null;
-    const mm  = gvizDate[5] !== undefined ? Number(gvizDate[5]) : null;
-
-    // Caso típico de HORA (Sheets usa 1899)
-    if (ano === 1899){
-      return `${String(hh ?? 0).padStart(2,"0")}:${String(mm ?? 0).padStart(2,"0")}`;
-    }
-
-    // Data + hora
-    if (hh !== null){
-      return `${String(dia).padStart(2,"0")}/${String(mes).padStart(2,"0")}/${ano} ` +
-             `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
-    }
-
-    // Somente data
-    return `${String(dia).padStart(2,"0")}/${String(mes).padStart(2,"0")}/${ano}`;
-  }
-
-  /* =========================
-     Caso quebrado: 9,11,30,14,3,0)
-     ========================= */
-  const brokenTime = s.match(/(\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)?$/);
-  if (brokenTime){
-    const hh = Number(brokenTime[4]);
-    const mm = Number(brokenTime[5]);
-    return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
-  }
-
-  /* =========================
-     ISO 2025-11-13 ou datetime
-     ========================= */
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
-  if (iso){
-    if (iso[4]){
-      return `${iso[3]}/${iso[2]}/${iso[1]} ${iso[4]}:${iso[5]}`;
-    }
-    return `${iso[3]}/${iso[2]}/${iso[1]}`;
-  }
-
-  return s;
-}
-
-
-  
 /* helpers */
 function parseGvizText(text){
   return JSON.parse(text.substring(text.indexOf("{"), text.lastIndexOf("}")+1));
@@ -231,10 +166,6 @@ function renderTable(containerId, sheetName, g){
   cols.forEach(h=>html+=`<th>${escapeHtml(h)}</th>`);
   html+="</tr></thead><tbody>";
 
-  row.forEach(cell=>{
-  html += `<td>${escapeHtml(formatCell(cell))}</td>`;
-  )};
-
   g.table.rows.forEach(r=>{
     const row = r.c.map(c=>c?c.v:"");
     const status = String(row[row.length-1]||"").toLowerCase();
@@ -246,10 +177,7 @@ function renderTable(containerId, sheetName, g){
     html+=`<tr class="${cls}">`;
     row.forEach(c=>html+=`<td>${escapeHtml(c)}</td>`);
     html+="</tr>";
-
-    
-});
-
+  });
 
   html+="</tbody></table>";
   document.getElementById(containerId).innerHTML=html;
