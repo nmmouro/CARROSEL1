@@ -159,7 +159,7 @@ thead th{
   <h2 id="carousel-title">AGENDA SERVIÇO SOCIAL</h2>
 
   <div id="carousel">
-    <div id="carousel-ss"></div>
+    <div id="carousel-social"></div>
     <div id="carousel-avisos" style="display:none"></div>
   </div>
 </section>
@@ -366,7 +366,7 @@ function toggleCarousel(){
     renderTable("painel", TAB_PAINEL, gPainel);
     renderTable("agenda", TAB_AGENDA, gAgenda);
     renderTable("social", TAB_SS, gSS);
-    renderTable("Avisos", TAB_AVISOS, gAvisos)
+    renderTable("avisos", TAB_AVISOS, gAvisos)
   }
 
 catch(err){
@@ -374,12 +374,12 @@ catch(err){
     document.getElementById("painel").innerText = "Erro ao carregar dados";
     document.getElementById("agenda").innerText = "Erro ao carregar dados";
     document.getElementById("social").innerText = "Erro ao carregar dados";
-  document.getElementById("Avisos").innerText = "Erro ao carregar dados";
+  document.getElementById("avisos").innerText = "Erro ao carregar dados";
   }
 }
 
 loadAll();
-setInterval(loadAll, 60000);
+loadAll();
 setInterval(toggleCarousel, 6000);
 
 </script>
