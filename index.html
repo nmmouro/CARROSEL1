@@ -215,8 +215,6 @@ function formatCell(value){
 }
 
   
-setInterval(updateClock,1000); updateClock();
-
 /* helpers */
 function parseGvizText(text){
   return JSON.parse(text.substring(text.indexOf("{"), text.lastIndexOf("}")+1));
