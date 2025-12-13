@@ -105,7 +105,7 @@ thead th{
   overflow:hidden;
   text-overflow:ellipsis
 }
- tr.status-andamento{background: rgba(255,165,0,0.06)}
+  tr.status-andamento{background: rgba(255,165,0,0.06)}
   tr.status-concluido{background: rgba(0,200,120,0.06)}
 
   @keyframes piscarCancelado {0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
@@ -356,22 +356,25 @@ function toggleCarousel(){
 
   async function loadAll(){
   try{
-    const [p,a,ss,av] = await Promise.all([
-      loadSheet(TAB_PAINEL),
-      loadSheet(TAB_AGENDA),
-      loadSheet(TAB_SS),
-      loadSheet(TAB_AVISOS)
+    const [gPainel, gAgenda, gSS, gAvisos] = await Promise.all([
+      fetchSheet(TAB_PAINEL),
+      fetchSheet(TAB_AGENDA),
+      fetchSheet(TAB_SS),
+      fetchSheet(TAB_AVISOS)
     ]);
 
-    renderTable("painel", p);
-    renderTable("agenda", a);
-    renderTable("carousel-ss", ss);
-    renderTable("carousel-avisos", av);
-
+    renderTable("painel", TAB_PAINEL, gPainel);
+    renderTable("agenda", TAB_AGENDA, gAgenda);
+    renderTable("social", TAB_SS, gSS);
+    renderTable("Avisos", TAB_AVISOS, gAvisos)
   }
 
-catch(e){
-    console.error(e);
+catch(err){
+    console.error("Erro ao carregar sheets:", err);
+    document.getElementById("painel").innerText = "Erro ao carregar dados";
+    document.getElementById("agenda").innerText = "Erro ao carregar dados";
+    document.getElementById("social").innerText = "Erro ao carregar dados";
+  document.getElementById("Avisos").innerText = "Erro ao carregar dados";
   }
 }
 
