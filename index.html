@@ -231,6 +231,10 @@ function renderTable(containerId, sheetName, g){
   cols.forEach(h=>html+=`<th>${escapeHtml(h)}</th>`);
   html+="</tr></thead><tbody>";
 
+  row.forEach(cell=>{
+  html += `<td>${escapeHtml(formatCell(cell))}</td>`;
+  )};
+
   g.table.rows.forEach(r=>{
     const row = r.c.map(c=>c?c.v:"");
     const status = String(row[row.length-1]||"").toLowerCase();
@@ -243,8 +247,7 @@ function renderTable(containerId, sheetName, g){
     row.forEach(c=>html+=`<td>${escapeHtml(c)}</td>`);
     html+="</tr>";
 
-    row.forEach(cell=>{
-  html += `<td>${escapeHtml(formatCell(cell))}</td>`;
+    
 });
 
 
