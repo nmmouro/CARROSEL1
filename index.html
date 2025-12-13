@@ -152,65 +152,63 @@ function updateClock(){
 setInterval(updateClock,1000);
 updateClock();
 
-function formatCell(value){
-  if (value === null || value === undefined) return "";
+function formatCell(raw, somenteHora=false){
+  if (raw === null || raw === undefined) return "";
 
-  // GViz geralmente vem como objeto {v,f}
-  if (typeof value === "object"){
-    if ("v" in value) return formatCell(value.v);
-    if ("f" in value) return formatCell(value.f);
-    return "";
+  // objetos com v/f
+  if (typeof raw === "object"){
+    if ("v" in raw) return formatCell(raw.v, somenteHora);
+    if ("f" in raw) return formatCell(raw.f, somenteHora);
+    try { return JSON.stringify(raw); } catch(e){ return String(raw); }
   }
 
-  const s = String(value).trim();
+  const s = String(raw).trim();
 
-  /* =========================
-     Date(YYYY,MM,DD[,HH,MM,SS])
-     ========================= */
-  const gvizDate = s.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),?(\d+)?)?\)$/);
-  if (gvizDate){
-    const ano = Number(gvizDate[1]);
-    const mes = Number(gvizDate[2]) + 1;
-    const dia = Number(gvizDate[3]);
-    const hh  = gvizDate[4] !== undefined ? Number(gvizDate[4]) : null;
-    const mm  = gvizDate[5] !== undefined ? Number(gvizDate[5]) : null;
+  // Date(YYYY,MM,DD[,HH,MM,SS])
+  const dateMatch = s.match(/^Date\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)(?:\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d+)\s*)?)?\)/);
+  if (dateMatch){
+    const ano = Number(dateMatch[1]);
+    const mes0 = Number(dateMatch[2]); // 0-based
+    const dia = Number(dateMatch[3]);
+    const hh = dateMatch[4] !== undefined ? Number(dateMatch[4]) : null;
+    const mm = dateMatch[5] !== undefined ? Number(dateMatch[5]) : 0;
 
-    // Caso típico de HORA (Sheets usa 1899)
+    // Se ano = 1899 (sheet time-only), retornar HH:MM
     if (ano === 1899){
-      return `${String(hh ?? 0).padStart(2,"0")}:${String(mm ?? 0).padStart(2,"0")}`;
+      if (somenteHora) return `${String(hh ?? 0).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+      // se não pedir somenteHora, ainda retornar só hora (evitar mostrar '30/12/1899')
+      return `${String(hh ?? 0).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
     }
 
-    // Data + hora
-    if (hh !== null){
-      return `${String(dia).padStart(2,"0")}/${String(mes).padStart(2,"0")}/${ano} ` +
-             `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+    // data real
+    if (hh !== null && somenteHora){
+      // se pediram somente hora e a data tem hora, retornar HH:MM
+      return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
     }
-
-    // Somente data
-    return `${String(dia).padStart(2,"0")}/${String(mes).padStart(2,"0")}/${ano}`;
+    const mes = String(mes0 + 1).padStart(2,"0");
+    return `${String(dia).padStart(2,"0")}/${mes}/${ano}` + (hh !== null ? ` ${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}` : "");
   }
 
-  /* =========================
-     Caso quebrado: 9,11,30,14,3,0)
-     ========================= */
-  const brokenTime = s.match(/(\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)?$/);
-  if (brokenTime){
-    const hh = Number(brokenTime[4]);
-    const mm = Number(brokenTime[5]);
-    return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+  // TimeOfDay(H,M,S)
+  const timeMatch = s.match(/^TimeOfDay\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+  if (timeMatch){
+    const hh = String(timeMatch[1]).padStart(2,"0");
+    const mm = String(timeMatch[2]).padStart(2,"0");
+    return somenteHora ? `${hh}:${mm}` : `${hh}:${mm}:${String(timeMatch[3]).padStart(2,"0")}`;
   }
 
-  /* =========================
-     ISO 2025-11-13 ou datetime
-     ========================= */
-  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
+  // ISO date/datetime YYYY-MM-DD[ T hh:mm:ss]
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T\s](\d{2}):(\d{2}):?(\d{2})?)?/);
   if (iso){
+    const ano = iso[1], mes = iso[2], dia = iso[3];
     if (iso[4]){
-      return `${iso[3]}/${iso[2]}/${iso[1]} ${iso[4]}:${iso[5]}`;
+      const hh = String(iso[4]).padStart(2,"0"), mm = String(iso[5] ?? "00").padStart(2,"0");
+      return somenteHora ? `${hh}:${mm}` : `${dia}/${mes}/${ano} ${hh}:${mm}`;
     }
-    return `${iso[3]}/${iso[2]}/${iso[1]}`;
+    return `${dia}/${mes}/${ano}`;
   }
 
+  // fallback: texto puro
   return s;
 }
 
