@@ -239,7 +239,11 @@ function renderTable(containerId, sheetName, g){
     html+=`<tr class="${cls}">`;
     row.forEach(c=>html+=`<td>${escapeHtml(c)}</td>`);
     html+="</tr>";
-  });
+
+    row.forEach(cell=>{
+  html += `<td>${escapeHtml(formatCell(cell))}</td>`;
+});
+
 
   html+="</tbody></table>";
   document.getElementById(containerId).innerHTML=html;
