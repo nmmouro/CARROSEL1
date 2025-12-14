@@ -163,10 +163,10 @@ function escapeHtml(s){
 function formatCell(cell){
   if (cell === null || cell === undefined) return "";
 
-  // Se for objeto GViz
+  // objeto GViz
   if (typeof cell === "object"){
-    if (cell.f) return cell.f;        // PRIORIDADE: valor já formatado
-    if (cell.v) return formatCell(cell.v);
+    if (cell.f !== undefined && cell.f !== null) return String(cell.f);
+    if (cell.v !== undefined && cell.v !== null) return formatCell(cell.v);
     return "";
   }
 
@@ -181,7 +181,7 @@ function formatCell(cell){
     const hh  = d[4] !== undefined ? +d[4] : null;
     const mm  = d[5] !== undefined ? +d[5] : null;
 
-    // Hora pura (Sheets usa 1899)
+    // hora pura (Sheets usa 1899)
     if (ano === 1899){
       return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
     }
@@ -194,9 +194,9 @@ function formatCell(cell){
     return `${String(dia).padStart(2,"0")}/${String(mes).padStart(2,"0")}/${ano}`;
   }
 
-  // fallback
   return s;
 }
+
 
 
 /* render */
@@ -207,27 +207,29 @@ function renderTable(containerId, g){
   cols.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
   html += "</tr></thead><tbody>";
 
-  g.table.rows.forEach(r => {
+  (g.table.rows || []).forEach(r => {
 
-    // pega a linha COMPLETA (objetos da GViz)
-    const cells = r.c || [];
+    const cells = Array.isArray(r.c) ? r.c : [];
 
-    // status = último valor formatado
-    const lastCell = cells[cells.length - 1];
-    const statusText = String(
-      lastCell?.f ?? lastCell?.v ?? ""
-    ).toLowerCase();
+    // status seguro
+    let statusText = "";
+    if (cells.length){
+      const last = cells[cells.length - 1];
+      statusText = String(last?.f ?? last?.v ?? "").toLowerCase();
+    }
 
     let cls = "";
     if (statusText.includes("andamento")) cls = "status-andamento";
-    if (statusText.includes("concluido")) cls = "status-concluido";
-    if (statusText.includes("cancelado")) cls = "status-cancelado";
+    else if (statusText.includes("concluido")) cls = "status-concluido";
+    else if (statusText.includes("cancelado")) cls = "status-cancelado";
 
     html += `<tr class="${cls}">`;
 
-    cells.forEach(cell => {
+    // garante mesma qtde de colunas
+    for (let i = 0; i < cols.length; i++){
+      const cell = cells[i] ?? null;
       html += `<td>${escapeHtml(formatCell(cell))}</td>`;
-    });
+    }
 
     html += "</tr>";
   });
@@ -235,6 +237,7 @@ function renderTable(containerId, g){
   html += "</tbody></table>";
   document.getElementById(containerId).innerHTML = html;
 }
+
 
 
 /* fetch */
