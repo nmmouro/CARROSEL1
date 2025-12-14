@@ -201,14 +201,23 @@ function formatCell(cell){
 
 /* render */
 function renderTable(containerId, g){
+  const container = document.getElementById(containerId);
+
+  // 🔒 validação total do GViz
+  if (!g || !g.table || !Array.isArray(g.table.cols)){
+    container.innerHTML =
+      "<div style='text-align:center;opacity:.7'>Sem dados</div>";
+    return;
+  }
+
   const cols = g.table.cols.map(c => c.label || "");
+  const rows = Array.isArray(g.table.rows) ? g.table.rows : [];
 
   let html = "<table><thead><tr>";
   cols.forEach(h => html += `<th>${escapeHtml(h)}</th>`);
   html += "</tr></thead><tbody>";
 
-  (g.table.rows || []).forEach(r => {
-
+  rows.forEach(r => {
     const cells = Array.isArray(r.c) ? r.c : [];
 
     // status seguro
@@ -225,18 +234,17 @@ function renderTable(containerId, g){
 
     html += `<tr class="${cls}">`;
 
-    // garante mesma qtde de colunas
     for (let i = 0; i < cols.length; i++){
-      const cell = cells[i] ?? null;
-      html += `<td>${escapeHtml(formatCell(cell))}</td>`;
+      html += `<td>${escapeHtml(formatCell(cells[i]))}</td>`;
     }
 
     html += "</tr>";
   });
 
   html += "</tbody></table>";
-  document.getElementById(containerId).innerHTML = html;
+  container.innerHTML = html;
 }
+
 
 
 
@@ -266,18 +274,24 @@ function toggleCarousel(){
 
 /* load */
 async function loadAll(){
-  const [p,a,s,v]=await Promise.all([
-    fetchSheet(TAB_PAINEL),
-    fetchSheet(TAB_AGENDA),
-    fetchSheet(TAB_SS),
-    fetchSheet(TAB_AVISOS)
-  ]);
+  try{
+    const [p,a,s,v] = await Promise.all([
+      fetchSheet(TAB_PAINEL),
+      fetchSheet(TAB_AGENDA),
+      fetchSheet(TAB_SS),
+      fetchSheet(TAB_AVISOS)
+    ]);
 
-  renderTable("painel",TAB_PAINEL,p);
-  renderTable("agenda",TAB_AGENDA,a);
-  renderTable("carousel-social",TAB_SS,s);
-  renderTable("carousel-avisos",TAB_AVISOS,v);
+    renderTable("painel", p);
+    renderTable("agenda", a);
+    renderTable("carousel-social", s);
+    renderTable("carousel-avisos", v);
+
+  } catch(err){
+    console.error("Erro ao carregar GViz:", err);
+  }
 }
+
 
 loadAll();
 setInterval(toggleCarousel,6000);
