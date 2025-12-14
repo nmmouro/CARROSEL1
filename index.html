@@ -159,6 +159,57 @@ function escapeHtml(s){
   return String(s ?? "").replace(/[&<>]/g,m=>({ "&":"&amp;","<":"&lt;",">":"&gt;" }[m]));
 }
 
+  /* ================= FORMATADOR UNIVERSAL ================= */
+function formatCell(value){
+  if (value === null || value === undefined) return "";
+
+  if (typeof value === "object"){
+    if ("v" in value) return formatCell(value.v);
+    if ("f" in value) return formatCell(value.f);
+    return "";
+  }
+
+  const s = String(value).trim();
+
+  /* Date(YYYY,MM,DD[,HH,MM,SS]) */
+  const d = s.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),?(\d+)?)?\)$/);
+  if (d){
+    const ano = +d[1];
+    const mes = +d[2] + 1;
+    const dia = +d[3];
+    const hh  = d[4] !== undefined ? +d[4] : null;
+    const mm  = d[5] !== undefined ? +d[5] : null;
+
+    if (ano === 1899){
+      return `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+    }
+
+    if (hh !== null){
+      return `${String(dia).padStart(2,"0")}/${String(mes).padStart(2,"0")}/${ano} ` +
+             `${String(hh).padStart(2,"0")}:${String(mm).padStart(2,"0")}`;
+    }
+
+    return `${String(dia).padStart(2,"0")}/${String(mes).padStart(2,"0")}/${ano}`;
+  }
+
+  /* Caso quebrado: 9,11,30,14,3,0) */
+  const broken = s.match(/(\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)?$/);
+  if (broken){
+    return `${String(broken[4]).padStart(2,"0")}:${String(broken[5]).padStart(2,"0")}`;
+  }
+
+  /* ISO */
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
+  if (iso){
+    if (iso[4]){
+      return `${iso[3]}/${iso[2]}/${iso[1]} ${iso[4]}:${iso[5]}`;
+    }
+    return `${iso[3]}/${iso[2]}/${iso[1]}`;
+  }
+
+  return s;
+}
+
 /* render */
 function renderTable(containerId, sheetName, g){
   const cols = g.table.cols.map(c=>c.label||"");
