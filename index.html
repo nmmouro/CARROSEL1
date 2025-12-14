@@ -81,6 +81,14 @@ thead th{
   top:0;
   background:rgba(255,255,255,0.05);
 }
+  /* ícone atendido */
+  td.status-icon{
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+  color:#00ff9c;
+}
+
 
 tr.status-andamento{background: rgba(255,165,0,0.06)}
 tr.status-concluido{background: rgba(0,200,120,0.06)}
@@ -230,16 +238,42 @@ function renderTable(containerId, g){
     }
 
     let cls = "";
-    if (statusText.includes("andamento")) cls = "status-andamento";
-    else if (statusText.includes("atendido")) cls = "status-atendido";
-    else if (statusText.includes("concluido")) cls = "status-concluido";
-    else if (statusText.includes("cancelado")) cls = "status-cancelado";
+if (statusText.includes("cancelado")) {
+  cls = "status-cancelado";
+}
+else if (
+  (containerId === "agenda" || containerId === "carousel-social") &&
+  statusText.includes("atendido")
+) {
+  cls = "status-atendido";
+}
+else if (statusText.includes("concluido")) {
+  cls = "status-concluido";
+}
+else if (statusText.includes("andamento")) {
+  cls = "status-andamento";
+}
+
 
     html += `<tr class="${cls}">`;
 
-    for (let i = 0; i < cols.length; i++){
-      html += `<td>${escapeHtml(formatCell(cells[i]))}</td>`;
-    }
+   for (let i = 0; i < cols.length; i++){
+  const isStatusCol = (i === cols.length - 1);
+  const rawText = formatCell(cells[i]);
+  const lower = rawText.toLowerCase();
+
+  // ATENDIDO → ✔ (somente nas agendas)
+  if (
+    isStatusCol &&
+    (containerId === "agenda" || containerId === "carousel-social") &&
+    lower.includes("atendido")
+  ){
+    html += `<td class="status-icon">✔</td>`;
+  }
+  else {
+    html += `<td>${escapeHtml(rawText)}</td>`;
+  }
+}
 
     html += "</tr>";
   });
