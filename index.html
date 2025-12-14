@@ -84,6 +84,8 @@ thead th{
 
 tr.status-andamento{background: rgba(255,165,0,0.06)}
 tr.status-concluido{background: rgba(0,200,120,0.06)}
+tr.status-atendido{background: rgba(0,160,255,0.18); font-weight: bold;}
+
 
 @keyframes piscarCancelado{
   0%{opacity:1}
@@ -229,6 +231,7 @@ function renderTable(containerId, g){
 
     let cls = "";
     if (statusText.includes("andamento")) cls = "status-andamento";
+    else if (statusText.includes("atendido")) cls = "status-atendido";
     else if (statusText.includes("concluido")) cls = "status-concluido";
     else if (statusText.includes("cancelado")) cls = "status-cancelado";
 
